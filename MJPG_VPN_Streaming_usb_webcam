@@ -1,0 +1,27 @@
+# This file uses the Tailscale VPN tunnel to live stream the feed from the USB webcam with low latency using MJPEG.
+
+#On KV260:
+# Install dependencies
+sudo apt update
+sudo apt install -y cmake libjpeg8-dev imagemagick libv4l-dev \
+  libjpeg-dev gcc g++ git
+
+# Clone the repo
+git clone https://github.com/jacksonliam/mjpg-streamer.git
+cd mjpg-streamer/mjpg-streamer-experimental
+
+# Build it
+make
+
+# Run it
+./mjpg_streamer -i "./input_uvc.so -f 15 -r 640x480" -o "./output_http.so -p 8080 -w ./www -l 0.0.0.0"
+
+
+./mjpg_streamer \
+  -i "./input_uvc.so -d /dev/video10 -r 640x480 -f 15" \
+  -o "./output_http.so -p 8080 -w ./www -l 0.0.0.0"
+
+
+
+#On laptop:
+http://100.76.21.119:8080/
