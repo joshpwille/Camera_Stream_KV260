@@ -1,0 +1,33 @@
+# This file walks you through how to get the KV260 ready to run YOLOv8, but not stream it.
+
+# on KV260
+sudo apt update
+sudo apt install -y v4l2loopback-dkms
+
+sudo modprobe v4l2loopback devices=1 video_nr=10 card_label="YOLOStream" exclusive_caps=1
+
+v4l2-ctl --list-devices
+
+
+cd ~
+mkdir testYOLO
+cd testYOLO
+
+# Install Python environment dependencies
+sudo apt install python3.10-venv -y
+python3.10 -m venv yolo_env
+source yolo_env/bin/activate
+
+# Install Python packages
+pip install setuptools
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+pip install ultralytics opencv-python
+
+
+
+#---------------------
+
+# Runs YOLO on board:
+cd ~/testYOLO
+source yolo_env/bin/activate
+python testyolo.py
