@@ -1,0 +1,86 @@
+# This script takes a USB webcam and streams the feed using local IP.
+
+#On your laptop:
+sudo apt update
+sudo apt install gstreamer1.0-tools gstreamer1.0-plugins-base \
+gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
+gstreamer1.0-plugins-ugly gstreamer1.0-libav -y
+
+
+#Keep in mind the IP address might be different
+
+#Reciever (Laptop):
+gst-launch-1.0 -v udpsrc port=5000 caps="application/x-rtp, media=video, encoding-name=H264, payload=96" ! \
+rtph264depay ! avdec_h264 ! videoconvert ! autovideosink
+
+
+#Sender:
+gst-launch-1.0 v4l2src device=/dev/video0 io-mode=mmap ! \
+"video/x-raw, width=1280, height=720, format=YUY2" ! \
+videoconvert ! x264enc tune=zerolatency ! \
+rtph264pay config-interval=1 pt=96 ! \
+udpsink host=192.168.86.55 port=5000
+
+
+
+#—------------------------
+#On Docker:
+
+
+sudo apt update
+sudo apt install docker.io -y
+
+sudo usermod -aG docker $USER
+newgrp docker
+
+docker run hello-world
+
+mkdir -p ~/gstreamer_receiver
+cd ~/gstreamer_receiver
+
+
+
+
+
+
+
+nano Dockerfile
+
+#---------------
+FROM ubuntu:22.04
+
+RUN apt update && apt install -y \
+    gstreamer1.0-tools \
+    gstreamer1.0-plugins-base \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-ugly \
+    gstreamer1.0-libav \
+    iputils-ping \
+    x11-apps
+
+CMD ["bash"]
+#--------------
+
+docker build -t gstreamer-receiver .
+
+docker images | grep gstreamer-receiver
+
+#Launch Docker Container: 
+xhost +local:root  # Allows Docker to access your display
+docker run -it --rm \
+  --net=host \
+  --env="DISPLAY=$DISPLAY" \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  gstreamer-receiver
+
+#Ready to Display Video:
+gst-launch-1.0 -v udpsrc port=5000 caps="application/x-rtp, media=video, encoding-name=H264, payload=96" \
+! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink
+
+
+
+
+
+
+
